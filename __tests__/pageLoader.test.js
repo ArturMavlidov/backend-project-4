@@ -1,3 +1,4 @@
+import nock from 'nock'
 import os from 'os'
 import path from 'path'
 import fs from 'fs/promises'
@@ -5,6 +6,14 @@ import fs from 'fs/promises'
 import { loadPage } from '../src/index'
 
 let directoryPath
+
+beforeAll(() => {
+  nock.disableNetConnect()
+
+  nock('https://ru.hexlet.io')
+    .get('/courses')
+    .reply(200, 'response')
+})
 
 beforeEach(async () => {
   const tmpDir = os.tmpdir()
