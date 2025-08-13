@@ -1,3 +1,5 @@
+### Demonstration
+[![asciicast](https://asciinema.org/a/dVKok25V5xW2SkjMF4LE8fZOw.svg)](https://asciinema.org/a/dVKok25V5xW2SkjMF4LE8fZOw)
 ### Hexlet tests and linter status:
 [![Actions Status](https://github.com/ArturMavlidov/backend-project-4/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/ArturMavlidov/backend-project-4/actions)
 ### Main github workflow
