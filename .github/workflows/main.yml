@@ -1,0 +1,11 @@
+name: main
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: npm install
+      - run: make lint
+      - run: make test
