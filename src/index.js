@@ -1,11 +1,17 @@
-import axios from "axios";
+import originalAxios from "axios";
+import { addLogger } from 'axios-debug-log'
 import * as cheerio from "cheerio";
 import fs from "fs/promises";
 import path from "path";
 
+import { logger } from './logger.js'
+
 const replaceUrl = (url) => {
   return url.replace(/https:\/\//, "").replace(/[./]/g, "-");
 };
+
+const axios = originalAxios.create({})
+addLogger(axios)
 
 const getFullSource = (protocol, domain, src) => {
   if (src?.[0] === "/") {
@@ -61,6 +67,7 @@ export const loadPage = ({ directoryPath, pageUrl }) => {
       const resources = [...imagesLinks, ...scriptsLinks, ...linksSources];
 
       if (!resources.length) {
+        logger("No resources")
         return fs.writeFile(filePath, pageContent).then(() => filePath);
       }
 
@@ -117,8 +124,6 @@ export const loadPage = ({ directoryPath, pageUrl }) => {
             filesDirectoryName,
           } = data;
 
-          const replacedDomain = replaceUrl(domain);
-
           const mapResourceTypeToHtml = {
             image: "src",
             script:"src",
@@ -134,9 +139,6 @@ export const loadPage = ({ directoryPath, pageUrl }) => {
               0,
               resourceLink.length - resourceExtName.length
             );
-
-            console.log(resourceLink, 'link');
-            console.log(resourceExtName);
 
             let resourceFileName =
               replaceUrl(resourceNameWithoutExtname) +
@@ -162,6 +164,8 @@ export const loadPage = ({ directoryPath, pageUrl }) => {
           return Promise.all(promises).then(() => $.html());
         })
         .then((html) => fs.writeFile(filePath, html))
+        .then(() => logger("Created file: " + filePath))
         .then(() => filePath);
-    });
-};
+    })
+    .catch((err) => logger("Error:", err))
+  };

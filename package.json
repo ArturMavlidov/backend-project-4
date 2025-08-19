@@ -24,6 +24,8 @@
     "@eslint/eslintrc": "^3.3.0",
     "@eslint/js": "^9.21.0",
     "@stylistic/eslint-plugin": "^4.1.0",
+    "axios-debug-log": "^1.0.0",
+    "debug": "^4.4.1",
     "eslint": "^9.21.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-jest": "^29.0.1",

@@ -7,3 +7,9 @@
 ### SonarQube
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ArturMavlidov_backend-project-4&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ArturMavlidov_backend-project-4)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ArturMavlidov_backend-project-4&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ArturMavlidov_backend-project-4)
+### Debug
+Debug tests: ``NODE_DEBUG=nock:* npm run test``
+
+Debug axios: ``DEBUG=axios node bin/pageLoader.js <url>``
+
+Debug page-loader: ``DEBUG=page-loader node bin/pageLoader.js <url>``
