@@ -1,5 +1,5 @@
 import path from 'path'
-import { readFileSync } from 'fs'
+import { readFile } from 'fs/promises'
 import { fileURLToPath } from 'url'
 
 export const getFixturePath = filename => path.join(
@@ -12,7 +12,7 @@ export const getFixturePath = filename => path.join(
 export const getFixtureContent = (filename) => {
   const file = getFixturePath(filename)
 
-  return readFileSync(file, {
+  return readFile(file, {
     encoding: 'utf-8',
   })
 }
