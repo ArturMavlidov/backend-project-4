@@ -14,7 +14,7 @@ program
     const [url] = program.args
     const directoryPath = program.opts().output
 
-    loadPage({ directoryPath, pageUrl: url })
+    loadPage({ directoryPath, pageUrl: url }).catch(() => {})
   })
 
 program.parse()

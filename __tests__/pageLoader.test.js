@@ -17,6 +17,10 @@ beforeAll(async () => {
 
   nock("https://ru.hexlet.io").get(/[^/courses]/).reply(200, "").persist();
   nock("https://ru.hexlet.io").get("/courses").reply(200, html).persist();
+  nock('https://non-exists')
+    .get('/')
+    .replyWithError(Object.assign(new Error('error'), { code: 'ENOTFOUND' }))
+    .persist();
 });
 
 beforeEach(async () => {
@@ -27,14 +31,14 @@ beforeEach(async () => {
     .then((folder) => (directoryPath = folder));
 });
 
-// test("loadPage result", async () => {
-//   const filePath = await loadPage({
-//     directoryPath,
-//     pageUrl,
-//   });
+test("loadPage result", async () => {
+  const filePath = await loadPage({
+    directoryPath,
+    pageUrl,
+  });
 
-//   expect(filePath).toBe(`${directoryPath}/ru-hexlet-io-courses.html`);
-// });
+  expect(filePath).toBe(`${directoryPath}/ru-hexlet-io-courses.html`);
+});
 
 test("loadPage html content", async () => {
   const filePath = await loadPage({
@@ -53,4 +57,17 @@ test("loadPage html content", async () => {
   ]);
 
   expect(prettifiedHtml).toBe(prettifiedExpectedHtml);
+});
+
+test("loadPage non-existent page", async () => {
+  try {
+    await loadPage({
+      directoryPath,
+      pageUrl: "https://non-exists"
+    });
+
+    throw new Error('Expected function to throw');
+  } catch (error) {
+    expect(error.code).toBe('ENOTFOUND');
+  }
 });
