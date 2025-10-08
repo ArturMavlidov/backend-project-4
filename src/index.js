@@ -1,87 +1,87 @@
-import originalAxios from "axios";
-import Listr from 'listr';
-import { addLogger } from "axios-debug-log";
-import * as cheerio from "cheerio";
-import fs from "fs/promises";
-import path from "path";
+import originalAxios from 'axios'
+import Listr from 'listr'
+import { addLogger } from 'axios-debug-log'
+import * as cheerio from 'cheerio'
+import fs from 'fs/promises'
+import path from 'path'
 
-import { logger } from "./logger.js";
+import { logger } from './logger.js'
 
 const replaceUrl = (url) => {
-  return url.replace(/https:\/\//, "").replace(/[./]/g, "-");
-};
+  return url.replace(/https:\/\//, '').replace(/[./]/g, '-')
+}
 
-const axios = originalAxios.create({});
-addLogger(axios);
+const axios = originalAxios.create({})
+addLogger(axios)
 
 const getFullSource = (protocol, domain, src) => {
-  if (src?.[0] === "/") {
-    return protocol + "//" + domain + src;
+  if (src?.[0] === '/') {
+    return protocol + '//' + domain + src
   }
 
-  return src;
-};
+  return src
+}
 
 const getLinksFromHtmlElems = (htmlElems, type, pageUrl) => {
-  const url = new URL(pageUrl);
-  const protocol = url.protocol;
-  const domain = url.hostname;
+  const url = new URL(pageUrl)
+  const protocol = url.protocol
+  const domain = url.hostname
 
   return htmlElems
     .filter((_, el) => {
       const src = getFullSource(
         protocol,
         domain,
-        el.attribs.src || el.attribs.href
-      );
-      if (!src) return false;
+        el.attribs.src || el.attribs.href,
+      )
+      if (!src) return false
 
-      let resourceUrl = new URL(src);
-      const resourceUrlDomain = resourceUrl.hostname;
+      let resourceUrl = new URL(src)
+      const resourceUrlDomain = resourceUrl.hostname
 
-      return resourceUrlDomain === domain;
+      return resourceUrlDomain === domain
     })
     .map((_, el) => {
       const src = getFullSource(
         protocol,
         domain,
-        el.attribs.src || el.attribs.href
-      );
-      return { src, type, element: el };
+        el.attribs.src || el.attribs.href,
+      )
+      return { src, type, element: el }
     })
-    .toArray();
-};
+    .toArray()
+}
 
 export const loadPage = ({ directoryPath, pageUrl }) => {
-  const replacedUrl = replaceUrl(pageUrl);
-  const fileName = replacedUrl + ".html";
-  const filePath = path.join(directoryPath, fileName);
+  const replacedUrl = replaceUrl(pageUrl)
+  const fileName = replacedUrl + '.html'
+  const filePath = path.join(directoryPath, fileName)
 
   return axios
     .get(pageUrl)
     .then(({ data }) => data)
     .then((pageContent) => {
-      const $ = cheerio.load(pageContent);
+      const $ = cheerio.load(pageContent)
 
-      const images = $("img");
-      const links = $("link");
-      const scripts = $("script");
+      const images = $('img')
+      const links = $('link')
+      const scripts = $('script')
 
-      const imagesLinks = getLinksFromHtmlElems(images, "image", pageUrl);
-      const scriptsLinks = getLinksFromHtmlElems(scripts, "script", pageUrl);
-      const linksSources = getLinksFromHtmlElems(links, "link", pageUrl);
+      const imagesLinks = getLinksFromHtmlElems(images, 'image', pageUrl)
+      const scriptsLinks = getLinksFromHtmlElems(scripts, 'script', pageUrl)
+      const linksSources = getLinksFromHtmlElems(links, 'link', pageUrl)
 
-      const resources = [...imagesLinks, ...scriptsLinks, ...linksSources];
+      const resources = [...imagesLinks, ...scriptsLinks, ...linksSources]
 
       if (!resources.length) {
-        logger("No resources");
-        return fs.writeFile(filePath, pageContent).then(() => filePath);
+        logger('No resources')
+        return fs.writeFile(filePath, pageContent).then(() => filePath)
       }
 
       const promises = resources.map((resource) => {
-        const { src, type, element } = resource;
+        const { src, type, element } = resource
 
-        const responseType = type === "image" ? "blob" : "text";
+        const responseType = type === 'image' ? 'blob' : 'text'
 
         return {
           title: src,
@@ -94,33 +94,33 @@ export const loadPage = ({ directoryPath, pageUrl }) => {
                   resourceLink: src,
                   resourceType: type,
                   resourceHtmlElement: element,
-                });
+                })
 
-                return data;
+                return data
               })
               .catch((err) => {
                 console.error(
-                  `Request to ${err.config.url || src} failed with code ${err.code}`
-                );
+                  `Request to ${err.config.url || src} failed with code ${err.code}`,
+                )
 
-                process.exit(1);
-              });
-          }
+                process.exit(1)
+              })
+          },
         }
-      });
+      })
 
-      const context = { results: [] };
+      const context = { results: [] }
       const tasks = new Listr(promises, { concurrent: true })
 
       return tasks.run(context)
         .then((ctx) => {
-          const resources = ctx.results;
-          const replacedUrl = replaceUrl(pageUrl);
-          const filesDirectoryName = replacedUrl + "_files";
+          const resources = ctx.results
+          const replacedUrl = replaceUrl(pageUrl)
+          const filesDirectoryName = replacedUrl + '_files'
           const filesDirectoryPath = path.join(
             directoryPath,
-            filesDirectoryName
-          );
+            filesDirectoryName,
+          )
 
           const data = {
             $,
@@ -128,39 +128,39 @@ export const loadPage = ({ directoryPath, pageUrl }) => {
             filesDirectoryPath,
             filesDirectoryName,
             pageContent,
-          };
+          }
 
           return fs
             .access(filesDirectoryPath)
             .then(() => data)
             .catch((err) => {
-            if (err.code === 'EACCES' || err.code === 'EPERM') {
-              console.error(`No access to ${directoryPath}`);
-              process.exit(1)
-            }
+              if (err.code === 'EACCES' || err.code === 'EPERM') {
+                console.error(`No access to ${directoryPath}`)
+                process.exit(1)
+              }
 
               return fs
                 .mkdir(filesDirectoryPath)
                 .then(() => data)
                 .catch((err) => {
-                  if (err.code === "ENOENT") {
+                  if (err.code === 'ENOENT') {
                     console.error(`No such file or directory: ${directoryPath}`)
-                    process.exit(1);
+                    process.exit(1)
                   }
 
-                  console.error(err);
-                  process.exit(1);
+                  console.error(err)
+                  process.exit(1)
                 })
-            });
+            })
         })
         .then((data) => {
-          const { $, resources, filesDirectoryPath, filesDirectoryName } = data;
+          const { $, resources, filesDirectoryPath, filesDirectoryName } = data
 
           const mapResourceTypeToHtml = {
-            image: "src",
-            script: "src",
-            link: "href",
-          };
+            image: 'src',
+            script: 'src',
+            link: 'href',
+          }
 
           const promises = resources.map((resource) => {
             const {
@@ -168,52 +168,52 @@ export const loadPage = ({ directoryPath, pageUrl }) => {
               resourceLink,
               resourceType,
               resourceHtmlElement,
-            } = resource;
+            } = resource
 
-            const resourceExtName = path.extname(resourceLink);
+            const resourceExtName = path.extname(resourceLink)
             const resourceNameWithoutExtname = resourceLink.slice(
               0,
-              resourceLink.length - resourceExtName.length
-            );
+              resourceLink.length - resourceExtName.length,
+            )
 
-            let resourceFileName =
-              replaceUrl(resourceNameWithoutExtname) + resourceExtName;
+            let resourceFileName
+              = replaceUrl(resourceNameWithoutExtname) + resourceExtName
 
             const recourceFilePath = path.join(
               filesDirectoryPath,
-              resourceFileName
-            );
+              resourceFileName,
+            )
 
-            const attrib = mapResourceTypeToHtml[resourceType];
-            const $element = $(resourceHtmlElement);
+            const attrib = mapResourceTypeToHtml[resourceType]
+            const $element = $(resourceHtmlElement)
 
             if (
-              resourceType === "link" &&
-              $element.attr("rel") === "canonical"
+              resourceType === 'link'
+              && $element.attr('rel') === 'canonical'
             ) {
-              resourceFileName += ".html";
+              resourceFileName += '.html'
             }
 
-            $element.attr(attrib, `${filesDirectoryName}/${resourceFileName}`);
+            $element.attr(attrib, `${filesDirectoryName}/${resourceFileName}`)
 
             return fs
               .writeFile(recourceFilePath, resourceContent)
-              .catch(console.log);
-          });
+              .catch(console.log)
+          })
 
-          return Promise.all(promises).then(() => $.html());
+          return Promise.all(promises).then(() => $.html())
         })
-        .then((html) => fs.writeFile(filePath, html))
-        .then(() => logger("Created file: " + filePath))
-        .then(() => filePath);
+        .then(html => fs.writeFile(filePath, html))
+        .then(() => logger('Created file: ' + filePath))
+        .then(() => filePath)
     })
     .catch((err) => {
-      logger("Error:", err);
+      logger('Error:', err)
 
-      if (err.code === "ENOTFOUND") {
-        console.error(`Page not found ${pageUrl}`);
+      if (err.code === 'ENOTFOUND') {
+        console.error(`Page not found ${pageUrl}`)
       }
 
-      throw err;
-    });
-};
+      throw err
+    })
+}
