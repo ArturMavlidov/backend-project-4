@@ -1,4 +1,5 @@
 import originalAxios from "axios";
+import Listr from 'listr';
 import { addLogger } from "axios-debug-log";
 import * as cheerio from "cheerio";
 import fs from "fs/promises";
@@ -82,26 +83,38 @@ export const loadPage = ({ directoryPath, pageUrl }) => {
 
         const responseType = type === "image" ? "blob" : "text";
 
-        return axios
-          .get(src, { responseType })
-          .then(({ data }) => {
-            return {
-              resourceContent: data,
-              resourceLink: src,
-              resourceType: type,
-              resourceHtmlElement: element,
-            };
-          })
-          .catch((err) => {
-            console.error(
-              `Request to ${err.config.url} failed with code ${err.code}`
-            );
-            process.exit(1);
-          });
+        return {
+          title: src,
+          task: (ctx) => {
+            return axios
+              .get(src, { responseType })
+              .then(({ data }) => {
+                ctx.results.push({
+                  resourceContent: data,
+                  resourceLink: src,
+                  resourceType: type,
+                  resourceHtmlElement: element,
+                });
+
+                return data;
+              })
+              .catch((err) => {
+                console.error(
+                  `Request to ${err.config.url || src} failed with code ${err.code}`
+                );
+
+                process.exit(1);
+              });
+          }
+        }
       });
 
-      return Promise.all(promises)
-        .then((resources) => {
+      const context = { results: [] };
+      const tasks = new Listr(promises, { concurrent: true })
+
+      return tasks.run(context)
+        .then((ctx) => {
+          const resources = ctx.results;
           const replacedUrl = replaceUrl(pageUrl);
           const filesDirectoryName = replacedUrl + "_files";
           const filesDirectoryPath = path.join(
