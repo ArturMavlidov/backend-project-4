@@ -217,3 +217,5 @@ export const loadPage = ({ directoryPath, pageUrl }) => {
       throw err
     })
 }
+
+export default loadPage
