@@ -53,6 +53,10 @@ const getLinksFromHtmlElems = (htmlElems, type, pageUrl) => {
 }
 
 export const loadPage = ({ directoryPath, pageUrl }) => {
+  if (!pageUrl) {
+    throw new Error('pageUrl not provided')
+  }
+
   const replacedUrl = replaceUrl(pageUrl)
   const fileName = replacedUrl + '.html'
   const filePath = path.join(directoryPath, fileName)
