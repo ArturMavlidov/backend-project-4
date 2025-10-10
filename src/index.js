@@ -11,7 +11,9 @@ const replaceUrl = (url) => {
   return url.replace(/https:\/\//, '').replace(/[./]/g, '-')
 }
 
-const axios = originalAxios.create({})
+const axios = originalAxios.create({
+  timeout: 10000,
+})
 addLogger(axios)
 
 const getFullSource = (protocol, domain, src) => {
@@ -52,7 +54,7 @@ const getLinksFromHtmlElems = (htmlElems, type, pageUrl) => {
     .toArray()
 }
 
-export const loadPage = ({ directoryPath, pageUrl }) => {
+export const loadPage = ({ directoryPath, pageUrl, timeout = 15000 }) => {
   if (!pageUrl) {
     throw new Error('pageUrl not provided')
   }
@@ -62,7 +64,7 @@ export const loadPage = ({ directoryPath, pageUrl }) => {
   const filePath = path.join(directoryPath, fileName)
 
   return axios
-    .get(pageUrl)
+    .get(pageUrl, { timeout })
     .then(({ data }) => data)
     .then((pageContent) => {
       const $ = cheerio.load(pageContent)
@@ -216,6 +218,10 @@ export const loadPage = ({ directoryPath, pageUrl }) => {
 
       if (err.code === 'ENOTFOUND') {
         console.error(`Page not found ${pageUrl}`)
+      }
+
+      if (err.code === 'ECONNABORTED') {
+        console.error(`The page is not responding ${pageUrl}`)
       }
 
       throw err

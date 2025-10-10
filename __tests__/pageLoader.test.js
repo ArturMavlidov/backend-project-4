@@ -17,6 +17,7 @@ beforeAll(async () => {
 
   nock('https://ru.hexlet.io').get(/[^/courses]/).reply(200, '').persist()
   nock('https://ru.hexlet.io').get('/courses').reply(200, html).persist()
+  nock('https://not-responsing').get('/').delay(5000).reply(400, '').persist()
   nock('https://non-exists')
     .get('/')
     .replyWithError(Object.assign(new Error('error'), { code: 'ENOTFOUND' }))
@@ -71,4 +72,12 @@ test('loadPage non-existent page', async () => {
   catch (error) {
     expect(error.code).toBe('ENOTFOUND')
   }
+})
+
+test('loadPage not responsing page', async () => {
+  await expect(loadPage({
+    directoryPath,
+    pageUrl: 'https://not-responsing',
+    timeout: 4000,
+  })).rejects.toThrow()
 })
