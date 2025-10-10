@@ -105,7 +105,7 @@ export const loadPage = ({ directoryPath, pageUrl, timeout = 15000 }) => {
                   `Request to ${err.config.url || src} failed with code ${err.code}`,
                 )
 
-                process.exit(1)
+                throw err
               })
           },
         }
@@ -137,8 +137,7 @@ export const loadPage = ({ directoryPath, pageUrl, timeout = 15000 }) => {
             .then(() => data)
             .catch((err) => {
               if (err.code === 'EACCES' || err.code === 'EPERM') {
-                console.error(`No access to ${directoryPath}`)
-                process.exit(1)
+                throw new Error(`No access to ${directoryPath}`)
               }
 
               return fs
@@ -146,12 +145,10 @@ export const loadPage = ({ directoryPath, pageUrl, timeout = 15000 }) => {
                 .then(() => data)
                 .catch((err) => {
                   if (err.code === 'ENOENT') {
-                    console.error(`No such file or directory: ${directoryPath}`)
-                    process.exit(1)
+                    throw new Error(`No such file or directory: ${directoryPath}`)
                   }
 
-                  console.error(err)
-                  process.exit(1)
+                  throw err
                 })
             })
         })
@@ -211,14 +208,6 @@ export const loadPage = ({ directoryPath, pageUrl, timeout = 15000 }) => {
     })
     .catch((err) => {
       logger('Error:', err)
-
-      if (err.code === 'ENOTFOUND') {
-        console.error(`Page not found ${pageUrl}`)
-      }
-
-      if (err.code === 'ECONNABORTED') {
-        console.error(`The page is not responding ${pageUrl}`)
-      }
 
       throw err
     })

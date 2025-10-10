@@ -14,7 +14,21 @@ program
     const [url] = program.args
     const directoryPath = program.opts().output
 
-    loadPage({ directoryPath, pageUrl: url }).catch(() => {})
+    loadPage({ directoryPath, pageUrl: url })
+      .catch((error) => {
+        if (error.code === 'ENOTFOUND') {
+          console.error(`Page not found ${url}`)
+          process.exit(1)
+        }
+
+        if (error.code === 'ECONNABORTED') {
+          console.error(`The page is not responding ${url}`)
+          process.exit(1)
+        }
+
+        console.error(`Error: ${error.message}`)
+        process.exit(1)
+      })
   })
 
 program.parse()
