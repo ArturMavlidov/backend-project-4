@@ -8,7 +8,7 @@ import path from 'path'
 import { logger } from './logger.js'
 
 const replaceUrl = (url = '') => {
-  return url.replace(/https:\/\//, '').replace(/[./]/g, '-')
+  return url.replace(/https?:\/\//, '').replace(/[./]/g, '-')
 }
 
 const axios = originalAxios.create({
