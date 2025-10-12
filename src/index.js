@@ -54,7 +54,7 @@ const getLinksFromHtmlElems = (htmlElems, type, pageUrl) => {
     .toArray()
 }
 
-export const loadPage = ({ directoryPath, pageUrl, timeout = 15000 }) => {
+export const loadPage = ({ directoryPath = process.cwd(), pageUrl, timeout = 15000 }) => {
   const replacedUrl = replaceUrl(pageUrl)
   const fileName = replacedUrl + '.html'
   const filePath = path.join(directoryPath, fileName)
@@ -214,3 +214,5 @@ export const loadPage = ({ directoryPath, pageUrl, timeout = 15000 }) => {
 }
 
 export default loadPage
+
+loadPage({})
