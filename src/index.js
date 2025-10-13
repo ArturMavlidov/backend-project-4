@@ -214,5 +214,3 @@ export const loadPage = ({ directoryPath = process.cwd(), pageUrl, timeout = 150
 }
 
 export default loadPage
-
-loadPage({})
