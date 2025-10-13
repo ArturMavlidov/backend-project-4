@@ -83,13 +83,11 @@ export const loadPage = ({ directoryPath = process.cwd(), pageUrl, timeout = 150
       const promises = resources.map((resource) => {
         const { src, type, element } = resource
 
-        const responseType = type === 'image' ? 'blob' : 'text'
-
         return {
           title: src,
           task: (ctx) => {
             return axios
-              .get(src, { responseType })
+              .get(src, { responseType: 'arraybuffer' })
               .then(({ data }) => {
                 ctx.results.push({
                   resourceContent: data,
