@@ -38,6 +38,8 @@ const getLinksFromHtmlElems = (htmlElems, type, pageUrl) => {
       )
       if (!src) return false
 
+      console.log(src, 'recourseSrc')
+
       let resourceUrl = new URL(src)
       const resourceUrlDomain = resourceUrl.hostname
 
