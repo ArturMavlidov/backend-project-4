@@ -176,6 +176,10 @@ export const loadPage = ({ directoryPath = process.cwd(), pageUrl, timeout = 150
             let resourceFileName
               = replaceUrl(resourceNameWithoutExtname) + resourceExtName
 
+            if (!resourceExtName) {
+              resourceFileName += '.html'
+            }
+
             const recourceFilePath = path.join(
               filesDirectoryPath,
               resourceFileName,
