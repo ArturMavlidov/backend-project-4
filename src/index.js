@@ -176,7 +176,12 @@ export const loadPage = ({ directoryPath = process.cwd(), pageUrl, timeout = 150
             let resourceFileName
               = replaceUrl(resourceNameWithoutExtname) + resourceExtName
 
-            if (!resourceExtName) {
+            const $element = $(resourceHtmlElement)
+
+            if (
+              resourceType === 'link'
+              && $element.attr('rel') === 'canonical'
+            ) {
               resourceFileName += '.html'
             }
 
@@ -186,14 +191,6 @@ export const loadPage = ({ directoryPath = process.cwd(), pageUrl, timeout = 150
             )
 
             const attrib = mapResourceTypeToHtml[resourceType]
-            const $element = $(resourceHtmlElement)
-
-            if (
-              resourceType === 'link'
-              && $element.attr('rel') === 'canonical'
-            ) {
-              resourceFileName += '.html'
-            }
 
             $element.attr(attrib, `${filesDirectoryName}/${resourceFileName}`)
 
