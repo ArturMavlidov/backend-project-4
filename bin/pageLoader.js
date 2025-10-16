@@ -14,7 +14,7 @@ program
     const [url] = program.args
     const directoryPath = program.opts().output
 
-    loadPage({ directoryPath, pageUrl: url })
+    loadPage(url, directoryPath)
       .catch((error) => {
         if (error.code === 'ENOTFOUND') {
           console.error(`Page not found ${url}`)
