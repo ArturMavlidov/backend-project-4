@@ -33,19 +33,19 @@ beforeEach(async () => {
 })
 
 test('loadPage result', async () => {
-  const filePath = await loadPage({
-    directoryPath,
+  const filePath = await loadPage(
     pageUrl,
-  })
+    directoryPath,
+  )
 
   expect(filePath).toBe(`${directoryPath}/ru-hexlet-io-courses.html`)
 })
 
 test('loadPage html content', async () => {
-  const filePath = await loadPage({
-    directoryPath,
+  const filePath = await loadPage(
     pageUrl,
-  })
+    directoryPath,
+  )
 
   const [html, expectedHtml] = await Promise.all([
     fs.readFile(filePath, 'utf-8'),
@@ -62,10 +62,10 @@ test('loadPage html content', async () => {
 
 test('loadPage non-existent page', async () => {
   try {
-    await loadPage({
+    await loadPage(
+      'https://non-exists',
       directoryPath,
-      pageUrl: 'https://non-exists',
-    })
+    )
 
     throw new Error('Expected function to throw')
   }
@@ -75,9 +75,9 @@ test('loadPage non-existent page', async () => {
 })
 
 test('loadPage not responsing page', async () => {
-  await expect(loadPage({
+  await expect(loadPage(
+    'https://not-responsing',
     directoryPath,
-    pageUrl: 'https://not-responsing',
-    timeout: 4000,
-  })).rejects.toThrow()
+    4000,
+  )).rejects.toThrow()
 })

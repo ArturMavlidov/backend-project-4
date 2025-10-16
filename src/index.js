@@ -56,10 +56,10 @@ const getLinksFromHtmlElems = (htmlElems, type, pageUrl) => {
     .toArray()
 }
 
-export const loadPage = ({ directoryPath = process.cwd(), pageUrl, timeout = 15000 }) => {
+export const loadPage = (pageUrl, outputDirname = process.cwd(), timeout = 15000) => {
   const replacedUrl = replaceUrl(pageUrl)
   const fileName = replacedUrl + '.html'
-  const filePath = path.join(directoryPath, fileName)
+  const filePath = path.join(outputDirname, fileName)
 
   return axios
     .get(pageUrl, { timeout })
@@ -119,33 +119,33 @@ export const loadPage = ({ directoryPath = process.cwd(), pageUrl, timeout = 150
           const resources = ctx.results
           const replacedUrl = replaceUrl(pageUrl)
           const filesDirectoryName = replacedUrl + '_files'
-          const filesDirectoryPath = path.join(
-            directoryPath,
+          const filesoutputDirname = path.join(
+            outputDirname,
             filesDirectoryName,
           )
 
           const data = {
             $,
             resources,
-            filesDirectoryPath,
+            filesoutputDirname,
             filesDirectoryName,
             pageContent,
           }
 
           return fs
-            .access(filesDirectoryPath)
+            .access(filesoutputDirname)
             .then(() => data)
             .catch((err) => {
               if (err.code === 'EACCES' || err.code === 'EPERM') {
-                throw new Error(`No access to ${directoryPath}`)
+                throw new Error(`No access to ${outputDirname}`)
               }
 
               return fs
-                .mkdir(filesDirectoryPath)
+                .mkdir(filesoutputDirname)
                 .then(() => data)
                 .catch((err) => {
                   if (err.code === 'ENOENT') {
-                    throw new Error(`No such file or directory: ${directoryPath}`)
+                    throw new Error(`No such file or directory: ${outputDirname}`)
                   }
 
                   throw err
@@ -153,7 +153,7 @@ export const loadPage = ({ directoryPath = process.cwd(), pageUrl, timeout = 150
             })
         })
         .then((data) => {
-          const { $, resources, filesDirectoryPath, filesDirectoryName } = data
+          const { $, resources, filesoutputDirname, filesDirectoryName } = data
 
           const mapResourceTypeToHtml = {
             image: 'src',
@@ -188,7 +188,7 @@ export const loadPage = ({ directoryPath = process.cwd(), pageUrl, timeout = 150
             }
 
             const recourceFilePath = path.join(
-              filesDirectoryPath,
+              filesoutputDirname,
               resourceFileName,
             )
 
