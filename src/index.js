@@ -1,60 +1,17 @@
 import originalAxios from 'axios'
 import Listr from 'listr'
-import { addLogger } from 'axios-debug-log'
 import * as cheerio from 'cheerio'
 import fs from 'fs/promises'
 import path from 'path'
+import { addLogger } from 'axios-debug-log'
 
+import { getLinksFromHtmlElems, replaceUrl } from './helpers/index.js'
 import { logger } from './logger.js'
-
-const replaceUrl = (url = '') => {
-  return url.replace(/https?:\/\//, '').replace(/[./]/g, '-')
-}
 
 const axios = originalAxios.create({
   timeout: 10000,
 })
 addLogger(axios)
-
-const getFullSource = (protocol, domain, src) => {
-  if (src?.[0] === '/') {
-    return protocol + '//' + domain + src
-  }
-
-  return src
-}
-
-const getLinksFromHtmlElems = (htmlElems, type, pageUrl) => {
-  const url = new URL(pageUrl)
-  const protocol = url.protocol
-  const domain = url.hostname
-
-  return htmlElems
-    .filter((_, el) => {
-      const src = getFullSource(
-        protocol,
-        domain,
-        el.attribs.src || el.attribs.href,
-      )
-      if (!src) return false
-
-      console.log(src, 'recourseSrc')
-
-      let resourceUrl = new URL(src)
-      const resourceUrlDomain = resourceUrl.hostname
-
-      return resourceUrlDomain === domain
-    })
-    .map((_, el) => {
-      const src = getFullSource(
-        protocol,
-        domain,
-        el.attribs.src || el.attribs.href,
-      )
-      return { src, type, element: el }
-    })
-    .toArray()
-}
 
 export const loadPage = (pageUrl, outputDirname = process.cwd(), timeout = 15000) => {
   const replacedUrl = replaceUrl(pageUrl)
@@ -88,6 +45,7 @@ export const loadPage = (pageUrl, outputDirname = process.cwd(), timeout = 15000
         return {
           title: src,
           task: (ctx) => {
+            // Получаем ресурсы из картинок/ссылок/скриптов
             return axios
               .get(src, { responseType: 'arraybuffer' })
               .then(({ data }) => {
@@ -119,7 +77,7 @@ export const loadPage = (pageUrl, outputDirname = process.cwd(), timeout = 15000
           const resources = ctx.results
           const replacedUrl = replaceUrl(pageUrl)
           const filesDirectoryName = replacedUrl + '_files'
-          const filesoutputDirname = path.join(
+          const filesOutputDirname = path.join(
             outputDirname,
             filesDirectoryName,
           )
@@ -127,13 +85,13 @@ export const loadPage = (pageUrl, outputDirname = process.cwd(), timeout = 15000
           const data = {
             $,
             resources,
-            filesoutputDirname,
+            filesOutputDirname,
             filesDirectoryName,
             pageContent,
           }
 
           return fs
-            .access(filesoutputDirname)
+            .access(filesOutputDirname)
             .then(() => data)
             .catch((err) => {
               if (err.code === 'EACCES' || err.code === 'EPERM') {
@@ -141,7 +99,7 @@ export const loadPage = (pageUrl, outputDirname = process.cwd(), timeout = 15000
               }
 
               return fs
-                .mkdir(filesoutputDirname)
+                .mkdir(filesOutputDirname)
                 .then(() => data)
                 .catch((err) => {
                   if (err.code === 'ENOENT') {
@@ -153,9 +111,9 @@ export const loadPage = (pageUrl, outputDirname = process.cwd(), timeout = 15000
             })
         })
         .then((data) => {
-          const { $, resources, filesoutputDirname, filesDirectoryName } = data
+          const { $, resources, filesOutputDirname, filesDirectoryName } = data
 
-          const mapResourceTypeToHtml = {
+          const mapResourceTypesToHtmlAttr = {
             image: 'src',
             script: 'src',
             link: 'href',
@@ -188,11 +146,11 @@ export const loadPage = (pageUrl, outputDirname = process.cwd(), timeout = 15000
             }
 
             const recourceFilePath = path.join(
-              filesoutputDirname,
+              filesOutputDirname,
               resourceFileName,
             )
 
-            const attrib = mapResourceTypeToHtml[resourceType]
+            const attrib = mapResourceTypesToHtmlAttr[resourceType]
 
             $element.attr(attrib, `${filesDirectoryName}/${resourceFileName}`)
 
