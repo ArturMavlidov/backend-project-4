@@ -15,18 +15,7 @@ program
     const directoryPath = program.opts().output
 
     loadPage(url, directoryPath)
-      .catch((error) => {
-        if (error.code === 'ENOTFOUND') {
-          console.error(`Page not found ${url}`)
-          process.exit(1)
-        }
-
-        if (error.code === 'ECONNABORTED') {
-          console.error(`The page is not responding ${url}`)
-          process.exit(1)
-        }
-
-        console.error(`Error: ${error.message}`)
+      .catch(() => {
         process.exit(1)
       })
   })

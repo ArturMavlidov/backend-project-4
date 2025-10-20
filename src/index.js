@@ -168,6 +168,16 @@ export const loadPage = (pageUrl, outputDirname = process.cwd(), timeout = 15000
     .catch((err) => {
       logger('Error:', err)
 
+      if (err.code === 'ENOTFOUND') {
+        console.error(`Page not found ${pageUrl}`)
+      }
+
+      if (err.code === 'ECONNABORTED') {
+        console.error(`The page is not responding ${pageUrl}`)
+      }
+
+      console.error(`Error: ${err.message}`)
+
       throw err
     })
 }
