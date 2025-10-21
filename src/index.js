@@ -15,7 +15,9 @@ addLogger(axios)
 
 export const loadPage = (pageUrl, outputDirname = process.cwd(), timeout = 15000) => {
   const replacedUrl = replaceUrl(pageUrl)
-  const fileName = replacedUrl + '.html'
+  const urlExtname = path.extname(pageUrl)
+  const isUrlHtml = urlExtname === '.html'
+  const fileName = replacedUrl + (isUrlHtml ? '' : '.html')
   const filePath = path.join(outputDirname, fileName)
 
   return axios
