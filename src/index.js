@@ -30,11 +30,14 @@ export const loadPage = (pageUrl, outputDirname = process.cwd(), timeout = 15000
       const links = $('link')
       const scripts = $('script')
 
-      const imagesLinks = getLinksFromHtmlElems(images, 'image', pageUrl)
-      const scriptsLinks = getLinksFromHtmlElems(scripts, 'script', pageUrl)
-      const linksSources = getLinksFromHtmlElems(links, 'link', pageUrl)
+      const mapper = [
+        { elems: images, type: 'image' },
+        { elems: links, type: 'link' },
+        { elems: scripts, type: 'script' },
+      ]
 
-      const resources = [...imagesLinks, ...scriptsLinks, ...linksSources]
+      const resources = mapper
+        .flatMap(({ elems, type }) => getLinksFromHtmlElems(elems, type, pageUrl))
 
       if (!resources.length) {
         logger('No resources')
