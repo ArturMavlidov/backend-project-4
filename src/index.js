@@ -1,16 +1,13 @@
-import originalAxios from 'axios'
 import Listr from 'listr'
 import * as cheerio from 'cheerio'
 import fs from 'fs/promises'
 import path from 'path'
 import { addLogger } from 'axios-debug-log'
 
-import { getLinksFromHtmlElems, replaceUrl } from './helpers/index.js'
+import { getLinksFromHtmlElems, replaceUrl, downloadResource } from './helpers/index.js'
 import { logger } from './logger.js'
+import { axios } from './axiosInstance.js'
 
-const axios = originalAxios.create({
-  timeout: 10000,
-})
 addLogger(axios)
 
 export const loadPage = (pageUrl, outputDirname = process.cwd(), timeout = 15000) => {
@@ -49,28 +46,7 @@ export const loadPage = (pageUrl, outputDirname = process.cwd(), timeout = 15000
 
         return {
           title: src,
-          task: (ctx) => {
-            // Получаем ресурсы из картинок/ссылок/скриптов
-            return axios
-              .get(src, { responseType: 'arraybuffer' })
-              .then(({ data }) => {
-                ctx.results.push({
-                  resourceContent: data,
-                  resourceLink: src,
-                  resourceType: type,
-                  resourceHtmlElement: element,
-                })
-
-                return data
-              })
-              .catch((err) => {
-                console.error(
-                  `Request to ${err.config.url || src} failed with code ${err.code}`,
-                )
-
-                throw err
-              })
-          },
+          task: ctx => downloadResource(src, type, element, ctx),
         }
       })
 
