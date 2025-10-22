@@ -1,4 +1,4 @@
-import { axios } from '../axiosInstance'
+import { axios } from '../axiosInstance.js'
 
 export const downloadResource = (src, type, element, ctx) => {
   return axios
