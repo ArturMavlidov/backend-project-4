@@ -17,9 +17,24 @@ export const loadPage = (pageUrl, outputDirname = process.cwd(), timeout = 15000
   const fileName = replacedUrl + (isUrlHtml ? '' : '.html')
   const filePath = path.join(outputDirname, fileName)
 
-  return axios
-    .get(pageUrl, { timeout })
-    .then(({ data }) => data)
+  return fs
+    .access(outputDirname)
+    .catch((err) => {
+      if (err.code === 'EACCES' || err.code === 'EPERM') {
+        throw new Error(`No access to ${outputDirname}`)
+      }
+
+      if (err.code === 'ENOENT') {
+        throw new Error(`No such file or directory: ${outputDirname}`)
+      }
+
+      throw err
+    })
+    .then(() =>
+      axios
+        .get(pageUrl, { timeout })
+        .then(({ data }) => data),
+    )
     .then((pageContent) => {
       const $ = cheerio.load(pageContent)
 
@@ -115,7 +130,7 @@ export const loadPage = (pageUrl, outputDirname = process.cwd(), timeout = 15000
             )
 
             let resourceFileName
-              = replaceUrl(resourceNameWithoutExtname) + resourceExtName
+                  = replaceUrl(resourceNameWithoutExtname) + resourceExtName
 
             const $element = $(resourceHtmlElement)
 
